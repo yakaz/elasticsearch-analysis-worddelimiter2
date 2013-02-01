@@ -111,10 +111,10 @@ public class WordDelimiterFilter2Factory extends AbstractTokenFilterFactory {
     }
 
     public int getFlag(int flag, Settings settings, String key, boolean defaultValue) {
-        if (settings.getAsBoolean(key, true)) {
-            return 0;
+        if (settings.getAsBoolean(key, defaultValue)) {
+            return flag;
         }
-        return flag;
+        return 0;
     }
 
     // source => type

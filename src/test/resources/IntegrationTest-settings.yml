@@ -1,0 +1,20 @@
+---
+index:
+    analysis:
+        analyzer:
+            configured_analyzer:
+                tokenizer: whitespace
+                filter: configured_word_delimiter_2
+        filter:
+            configured_word_delimiter_2:
+                type: word_delimiter_2
+                catenate_all: true
+                catenate_numbers: true
+                catenate_words: true
+                generate_number_parts: true
+                generate_word_parts: true
+                preserve_original: true
+                split_on_case_change: true
+                split_on_numerics: true
+                stem_english_possessive: true
+                all_parts_at_same_position: true
