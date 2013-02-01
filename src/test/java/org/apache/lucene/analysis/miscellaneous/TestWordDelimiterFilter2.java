@@ -19,30 +19,24 @@ package org.apache.lucene.analysis.miscellaneous;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
-import org.apache.lucene.analysis.CharArraySet;
-import org.apache.lucene.analysis.KeywordTokenizer;
 import org.apache.lucene.analysis.MockTokenizer;
-import org.apache.lucene.analysis.ReusableAnalyzerBase;
-import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
+import org.apache.lucene.analysis.core.StopFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.analysis.util.CharArraySet;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterFilter2.ALL_PARTS_AT_SAME_POSITION;
@@ -90,14 +84,16 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
     assertTokenStreamContents(wdf, 
         new String[] { "foo", "bar", "foobar" },
         new int[] { 5, 9, 5 }, 
-        new int[] { 8, 12, 12 });
+        new int[] { 8, 12, 12 },
+        null, null, null, null, false);
 
     wdf = new WordDelimiterFilter2(new SingleTokenTokenStream(new Token("foo-bar", 5, 6)), DEFAULT_WORD_DELIM_TABLE, flags, null);
     
     assertTokenStreamContents(wdf,
         new String[] { "foo", "bar", "foobar" },
         new int[] { 5, 5, 5 },
-        new int[] { 6, 6, 6 });
+        new int[] { 6, 6, 6 },
+        null, null, null, null, false);
   }
   
   @Test
@@ -141,7 +137,8 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
     assertTokenStreamContents(wdf,
         new String[] { "foo", "bar", "foobar"},
         new int[] { 8, 12, 8 },
-        new int[] { 11, 15, 15 });
+        new int[] { 11, 15, 15 },
+        null, null, null, null, false);
   }
 
   public void doSplit(final String input, String... output) throws Exception {
@@ -234,7 +231,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
     final CharArraySet protWords = new CharArraySet(TEST_VERSION_CURRENT, new HashSet<String>(Arrays.asList("NUTCH")), false);
     
     /* analyzer that uses whitespace + wdf */
-    Analyzer a = new ReusableAnalyzerBase() {
+    Analyzer a = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -249,29 +246,37 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 9 },
         new int[] { 6, 13 },
         null,
-        new int[] { 1, 1 });
+        new int[] { 1, 1 },
+        null,
+        false);
     
     /* only in this case, posInc of 2 ?! */
     assertAnalyzesTo(a, "LUCENE / solR", new String[] { "LUCENE", "sol", "R", "solR" },
         new int[] { 0, 9, 12, 9 },
         new int[] { 6, 12, 13, 13 },
         null,
-        new int[] { 1, 1, 1, 0 });
+        new int[] { 1, 1, 1, 0 },
+        null,
+        false);
     
     assertAnalyzesTo(a, "LUCENE / NUTCH SOLR", new String[] { "LUCENE", "NUTCH", "SOLR" },
         new int[] { 0, 9, 15 },
         new int[] { 6, 14, 19 },
         null,
-        new int[] { 1, 1, 1 });
+        new int[] { 1, 1, 1 },
+        null,
+        false);
 
     assertAnalyzesTo(a, "LUCENE4.0.0", new String[] { "LUCENE", "4", "0", "0", "LUCENE400" },
         new int[] { 0, 6, 8, 10, 0 },
         new int[] { 6, 7, 9, 11, 11 },
         null,
-        new int[] { 1, 1, 1, 1, 0 });
+        new int[] { 1, 1, 1, 1, 0 },
+        null,
+        false);
 
     /* analyzer that will consume tokens with large position increments */
-    Analyzer a2 = new ReusableAnalyzerBase() {
+    Analyzer a2 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -286,29 +291,37 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 7, 16 },
         new int[] { 6, 15, 20 },
         null,
-        new int[] { 1, 10, 1 });
+        new int[] { 1, 10, 1 },
+        null,
+        false);
     
     /* the "/" had a position increment of 10, where did it go?!?!! */
     assertAnalyzesTo(a2, "LUCENE / SOLR", new String[] { "LUCENE", "SOLR" },
         new int[] { 0, 9 },
         new int[] { 6, 13 },
         null,
-        new int[] { 1, 11 });
+        new int[] { 1, 11 },
+        null,
+        false);
     
     /* in this case, the increment of 10 from the "/" is carried over */
     assertAnalyzesTo(a2, "LUCENE / solR", new String[] { "LUCENE", "sol", "R", "solR" },
         new int[] { 0, 9, 12, 9 },
         new int[] { 6, 12, 13, 13 },
         null,
-        new int[] { 1, 11, 1, 0 });
+        new int[] { 1, 11, 1, 0 },
+        null,
+        false);
     
     assertAnalyzesTo(a2, "LUCENE / NUTCH SOLR", new String[] { "LUCENE", "NUTCH", "SOLR" },
         new int[] { 0, 9, 15 },
         new int[] { 6, 14, 19 },
         null,
-        new int[] { 1, 11, 1 });
+        new int[] { 1, 11, 1 },
+        null,
+        false);
 
-    Analyzer a3 = new ReusableAnalyzerBase() {
+    Analyzer a3 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -324,7 +337,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 7, 0 },
         new int[] { 6, 11, 11 },
         null,
-        new int[] { 1, 1, 0 });
+        new int[] { 1, 1, 0 },
+        null,
+        false);
 
     /* the stopword should add a gap here */
     assertAnalyzesTo(a3, "the lucene.solr", 
@@ -332,10 +347,12 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 4, 11, 4 }, 
         new int[] { 10, 15, 15 },
         null,
-        new int[] { 2, 1, 0 });
+        new int[] { 2, 1, 0 },
+        null,
+        false);
 
     final int flags4 = flags | CATENATE_WORDS;
-    Analyzer a4 = new ReusableAnalyzerBase() {
+    Analyzer a4 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -349,7 +366,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 6, 8, 10, 0 },
         new int[] { 6, 7, 9, 11, 11 },
         null,
-        new int[] { 1, 1, 1, 1, 0 });
+        new int[] { 1, 1, 1, 1, 0 },
+        null,
+        false);
   }
 
   @Test
@@ -358,7 +377,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
     final CharArraySet protWords = new CharArraySet(TEST_VERSION_CURRENT, new HashSet<String>(Arrays.asList("NUTCH")), false);
     
     /* analyzer that uses whitespace + wdf */
-    Analyzer a = new ReusableAnalyzerBase() {
+    Analyzer a = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -380,7 +399,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 9, 12, 9 },
         new int[] { 6, 12, 13, 13 },
         null,
-        new int[] { 1, 1, 0, 0 });
+        new int[] { 1, 1, 0, 0 },
+        null,
+        false);
     
     assertAnalyzesTo(a, "LUCENE / NUTCH SOLR", new String[] { "LUCENE", "NUTCH", "SOLR" },
         new int[] { 0, 9, 15 },
@@ -392,10 +413,12 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 6, 8, 10, 0 },
         new int[] { 6, 7, 9, 11, 11 },
         null,
-        new int[] { 1, 0, 0, 0, 0 });
+        new int[] { 1, 0, 0, 0, 0 },
+        null,
+        false);
 
     /* analyzer that will consume tokens with large position increments */
-    Analyzer a2 = new ReusableAnalyzerBase() {
+    Analyzer a2 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -424,7 +447,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 9, 12, 9 },
         new int[] { 6, 12, 13, 13 },
         null,
-        new int[] { 1, 11, 0, 0 });
+        new int[] { 1, 11, 0, 0 },
+        null,
+        false);
     
     assertAnalyzesTo(a2, "LUCENE / NUTCH SOLR", new String[] { "LUCENE", "NUTCH", "SOLR" },
         new int[] { 0, 9, 15 },
@@ -432,7 +457,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         null,
         new int[] { 1, 11, 1 });
 
-    Analyzer a3 = new ReusableAnalyzerBase() {
+    Analyzer a3 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -448,7 +473,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 7, 0 },
         new int[] { 6, 11, 11 },
         null,
-        new int[] { 1, 0, 0 });
+        new int[] { 1, 0, 0 },
+        null,
+        false);
 
     /* the stopword should add a gap here */
     assertAnalyzesTo(a3, "the lucene.solr", 
@@ -456,10 +483,12 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 4, 11, 4 }, 
         new int[] { 10, 15, 15 },
         null,
-        new int[] { 2, 0, 0 });
+        new int[] { 2, 0, 0 },
+        null,
+        false);
 
     final int flags4 = flags | CATENATE_WORDS;
-    Analyzer a4 = new ReusableAnalyzerBase() {
+    Analyzer a4 = new Analyzer() {
       @Override
       public TokenStreamComponents createComponents(String field, Reader reader) {
         Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
@@ -473,7 +502,9 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         new int[] { 0, 6, 8, 10, 0 },
         new int[] { 6, 7, 9, 11, 11 },
         null,
-        new int[] { 1, 0, 0, 0, 0 });
+        new int[] { 1, 0, 0, 0, 0 },
+        null,
+        false);
   }
   
   /** blast some random strings through the analyzer */
@@ -488,7 +519,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         protectedWords = null;
       }
       
-      Analyzer a = new ReusableAnalyzerBase() {
+      Analyzer a = new Analyzer() {
         
         @Override
         protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
@@ -496,7 +527,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
           return new TokenStreamComponents(tokenizer, new WordDelimiterFilter2(tokenizer, flags, protectedWords));
         }
       };
-      checkRandomData(random(), a, 200, 20);
+      checkRandomData(random(), a, 200, 20, false, false);
     }
   }
   
@@ -511,7 +542,7 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         protectedWords = null;
       }
     
-      Analyzer a = new ReusableAnalyzerBase() {
+      Analyzer a = new Analyzer() {
         @Override
         protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
           Tokenizer tokenizer = new KeywordTokenizer(reader);
@@ -519,174 +550,8 @@ public class TestWordDelimiterFilter2 extends BaseTokenStreamTestCase {
         }
       };
       // depending upon options, this thing may or may not preserve the empty term
-      checkAnalysisConsistency(random, a, "");
+      checkAnalysisConsistency(random, a, random.nextBoolean(), "");
     }
   }
 
-  ////////////////////////////////////////////////////////////
-  // Adapted from BaseTokenStreamTestCase from Lucene 4.0.0 //
-  ////////////////////////////////////////////////////////////
-
-  private Random random() {
-    return new Random();
-  }
-
-  private static void checkAnalysisConsistency(Random random, Analyzer a, String text) throws IOException {
-    checkAnalysisConsistency(random, a, text, null);
-  }
-
-  private static void checkAnalysisConsistency(Random random, Analyzer a, String text, Field field) throws IOException {
-
-    if (VERBOSE) {
-      System.out.println(Thread.currentThread().getName() + ": NOTE: BaseTokenStreamTestCase: get first token stream now text=" + text);
-    }
-
-    int remainder = random.nextInt(10);
-    Reader reader = new StringReader(text);
-    TokenStream ts = a.tokenStream("dummy", reader);
-    assertTrue("has no CharTermAttribute", ts.hasAttribute(CharTermAttribute.class));
-    CharTermAttribute termAtt = ts.getAttribute(CharTermAttribute.class);
-    OffsetAttribute offsetAtt = ts.hasAttribute(OffsetAttribute.class) ? ts.getAttribute(OffsetAttribute.class) : null;
-    PositionIncrementAttribute posIncAtt = ts.hasAttribute(PositionIncrementAttribute.class) ? ts.getAttribute(PositionIncrementAttribute.class) : null;
-    TypeAttribute typeAtt = ts.hasAttribute(TypeAttribute.class) ? ts.getAttribute(TypeAttribute.class) : null;
-    List<String> tokens = new ArrayList<String>();
-    List<String> types = new ArrayList<String>();
-    List<Integer> positions = new ArrayList<Integer>();
-    List<Integer> positionLengths = new ArrayList<Integer>();
-    List<Integer> startOffsets = new ArrayList<Integer>();
-    List<Integer> endOffsets = new ArrayList<Integer>();
-    ts.reset();
-
-    // First pass: save away "correct" tokens
-    while (ts.incrementToken()) {
-      tokens.add(termAtt.toString());
-      if (typeAtt != null) types.add(typeAtt.type());
-      if (posIncAtt != null) positions.add(posIncAtt.getPositionIncrement());
-      if (offsetAtt != null) {
-        startOffsets.add(offsetAtt.startOffset());
-        endOffsets.add(offsetAtt.endOffset());
-      }
-    }
-    ts.end();
-    ts.close();
-
-    // verify reusing is "reproducable" and also get the normal tokenstream sanity checks
-    if (!tokens.isEmpty()) {
-
-      // KWTokenizer (for example) can produce a token
-      // even when input is length 0:
-      if (text.length() != 0) {
-
-        // (Optional) second pass: do something evil:
-        final int evilness = random.nextInt(50);
-        if (evilness == 7) {
-          // Only consume a subset of the tokens:
-          final int numTokensToRead = random.nextInt(tokens.size());
-          if (VERBOSE) {
-            System.out.println(Thread.currentThread().getName() + ": NOTE: BaseTokenStreamTestCase: re-run analysis, only consuming " + numTokensToRead + " of " + tokens.size() + " tokens");
-          }
-
-          reader = new StringReader(text);
-          ts = a.tokenStream("dummy", reader);
-          ts.reset();
-          for(int tokenCount=0;tokenCount<numTokensToRead;tokenCount++) {
-            assertTrue(ts.incrementToken());
-          }
-          try {
-            ts.end();
-          } catch (AssertionError ae) {
-            // Catch & ignore MockTokenizer's
-            // anger...
-            if ("end() called before incrementToken() returned false!".equals(ae.getMessage())) {
-              // OK
-            } else {
-              throw ae;
-            }
-          }
-          ts.close();
-        }
-      }
-    }
-
-    // Final pass: verify clean tokenization matches
-    // results from first pass:
-
-    if (VERBOSE) {
-      System.out.println(Thread.currentThread().getName() + ": NOTE: BaseTokenStreamTestCase: re-run analysis; " + tokens.size() + " tokens");
-    }
-    reader = new StringReader(text);
-
-    long seed = random.nextLong();
-    random = new Random(seed);
-    if (random.nextInt(30) == 7) {
-      if (VERBOSE) {
-        System.out.println(Thread.currentThread().getName() + ": NOTE: BaseTokenStreamTestCase: using spoon-feed reader");
-      }
-    }
-
-    ts = a.tokenStream("dummy", reader);
-    if (typeAtt != null && posIncAtt != null && offsetAtt != null) {
-      // offset + pos + posLength + type
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]),
-                                toIntArray(startOffsets),
-                                toIntArray(endOffsets),
-                                types.toArray(new String[types.size()]),
-                                toIntArray(positions),
-                                text.length());
-    } else if (typeAtt != null && posIncAtt != null && offsetAtt != null) {
-      // offset + pos + type
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]),
-                                toIntArray(startOffsets),
-                                toIntArray(endOffsets),
-                                types.toArray(new String[types.size()]),
-                                toIntArray(positions),
-                                text.length());
-    } else if (posIncAtt != null && offsetAtt != null) {
-      // offset + pos + posLength
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]),
-                                toIntArray(startOffsets),
-                                toIntArray(endOffsets),
-                                null,
-                                toIntArray(positions),
-                                text.length());
-    } else if (posIncAtt != null && offsetAtt != null) {
-      // offset + pos
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]),
-                                toIntArray(startOffsets),
-                                toIntArray(endOffsets),
-                                null,
-                                toIntArray(positions),
-                                text.length());
-    } else if (offsetAtt != null) {
-      // offset
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]),
-                                toIntArray(startOffsets),
-                                toIntArray(endOffsets),
-                                null,
-                                null,
-                                text.length());
-    } else {
-      // terms only
-      assertTokenStreamContents(ts, 
-                                tokens.toArray(new String[tokens.size()]));
-    }
-    
-    if (field != null) {
-      field.setValue(text);
-    }
-  }
-
-  private static int[] toIntArray(List<Integer> list) {
-    int ret[] = new int[list.size()];
-    int offset = 0;
-    for (Integer i : list) {
-      ret[offset++] = i;
-    }
-    return ret;
-  }
 }
