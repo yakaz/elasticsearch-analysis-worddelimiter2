@@ -202,7 +202,7 @@ public final class WordDelimiterFilter2 extends TokenFilter {
     }
 
     /**
-     * Creates a new WordDelimiterFilter2 using {@link org.apache.lucene.analysis.miscellaneous.WordDelimiterIterator#DEFAULT_WORD_DELIM_TABLE}
+     * Creates a new WordDelimiterFilter2 using {@link WordDelimiterIterator#DEFAULT_WORD_DELIM_TABLE}
      * as its charTypeTable
      *
      * @param in TokenStream to be filtered
@@ -213,6 +213,7 @@ public final class WordDelimiterFilter2 extends TokenFilter {
         this(in, WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, configurationFlags, protWords);
     }
 
+    @Override
     public boolean incrementToken() throws IOException {
         while (true) {
             if (!hasSavedState) {
