@@ -14,7 +14,7 @@ This will download the plugin from the Central Maven Repository.
 
 For older versions of ElasticSearch, you can still use the longer:
 
-	bin/plugin -url http://oss.sonatype.org/content/repositories/releases/com/yakaz/elasticsearch/plugins/elasticsearch-analysis-worddelimiter2/1.1.0/elasticsearch-analysis-worddelimiter2-1.1.0.zip install elasticsearch-analysis-worddelimiter2
+	bin/plugin -url http://oss.sonatype.org/content/repositories/releases/com/yakaz/elasticsearch/plugins/elasticsearch-analysis-worddelimiter2/1.0.1/elasticsearch-analysis-worddelimiter2-1.0.1.zip install elasticsearch-analysis-worddelimiter2
 
 In order to declare this plugin as a dependency, add the following to your `pom.xml`:
 
