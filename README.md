@@ -8,7 +8,7 @@ Installation
 
 Simply run at the root of your ElasticSearch v0.20.2+ installation:
 
-	bin/plugin -install com.yakaz.elasticsearch.plugins/elasticsearch-analysis-worddelimiter2/1.1.0
+	bin/plugin -install com.yakaz.elasticsearch.plugins/elasticsearch-analysis-worddelimiter2/1.2.0
 
 This will download the plugin from the Central Maven Repository.
 
@@ -22,21 +22,21 @@ In order to declare this plugin as a dependency, add the following to your `pom.
 <dependency>
     <groupId>com.yakaz.elasticsearch.plugins</groupId>
     <artifactId>elasticsearch-analysis-worddelimiter2</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
 Version matrix:
 
-	┌─────────────────────────────────┬────────────────┐
-	│ WordDelimiter 2 Analysis Plugin │ ElasticSearch  │
-	├─────────────────────────────────┼────────────────┤
-	│ 1.1.0                           │ 0.90 ─► master │
-	├─────────────────────────────────┼────────────────┤
-	│ 1.0.1                           │ 0.19 ─► 0.20   │
-	├─────────────────────────────────┼────────────────┤
-	│ 1.0.0                           │ 0.19 ─► 0.20   │
-	└─────────────────────────────────┴────────────────┘
+	┌─────────────────────────────────┬──────────────────────┐
+	│ WordDelimiter 2 Analysis Plugin │ ElasticSearch        │
+	├─────────────────────────────────┼──────────────────────┤
+	│ 1.2.x                           │ 1.0.0.RC1 ─► (1.0.0) │
+	├─────────────────────────────────┼──────────────────────┤
+	│ 1.1.x                           │ 0.90 ─► (0.90.11)    │
+	├─────────────────────────────────┼──────────────────────┤
+	│ 1.0.x                           │ 0.19 ─► 0.20         │
+	└─────────────────────────────────┴──────────────────────┘
 
 Description
 -----------
